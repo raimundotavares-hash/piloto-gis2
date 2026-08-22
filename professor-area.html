@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDOMED • Área do Professor</title>
+
+<style>
+:root{
+  --p:#005b55;
+  --o:#f47c20;
+  --bg:#f3f7f6;
+  --line:#d8e4e2;
+  --muted:#657270;
+}
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:#17201f;
+}
+
+header{
+  background:#fff;
+  border-bottom:5px solid var(--p);
+  padding:15px 4%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.brand{
+  color:var(--p);
+  font-size:21px;
+  font-weight:900;
+}
+
+.container{
+  max-width:1250px;
+  margin:25px auto;
+  padding:0 16px 40px;
+}
+
+.hero,
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  box-shadow:0 8px 28px #00000010;
+}
+
+.hero{
+  padding:22px;
+  margin-bottom:18px;
+}
+
+.hero h1{
+  color:var(--p);
+  margin:0 0 6px;
+}
+
+.muted{
+  color:var(--muted);
+}
+
+button,
+.btn{
+  border:0;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+
+.light{
+  background:#edf5f3;
+  color:var(--p);
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+}
+
+.card{
+  padding:18px;
+}
+
+.course{
+  border-left:6px solid var(--p);
+  min-height:180px;
+  display:flex;
+  flex-direction:column;
+}
+
+.course h3{
+  color:var(--p);
+  margin:10px 0 7px;
+}
+
+.badge{
+  width:max-content;
+  font-size:11px;
+  background:#edf5f3;
+  color:var(--p);
+  padding:5px 8px;
+  border-radius:999px;
+  font-weight:800;
+}
+
+.course .actions{
+  margin-top:auto;
+  padding-top:12px;
+}
+
+.assessment{
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#fff;
+  margin:9px 0;
+}
+
+.empty{
+  padding:18px;
+  border:1px dashed #b9c9c6;
+  border-radius:12px;
+  color:var(--muted);
+  background:#fff;
+}
+
+.error{
+  background:#fff4e9;
+  border-left:5px solid var(--o);
+  padding:14px;
+  border-radius:9px;
+}
+
+.section-title{
+  color:var(--p);
+  margin-top:24px;
+}
+
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">IDOMED • Área do Professor</div>
+  <button class="light" onclick="logout()">Sair</button>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1 id="welcome">Área do Professor</h1>
+    <div id="idline" class="muted">
+      Carregando identificação...
+    </div>
+  </div>
+
+  <h2 class="section-title">Minhas disciplinas</h2>
+  <div id="courses" class="grid">
+    <div class="empty">Carregando disciplinas...</div>
+  </div>
+
+  <h2 class="section-title">Minhas avaliações</h2>
+  <div id="assessments">
+    <div class="empty">Carregando avaliações...</div>
+  </div>
+
+</div>
+
+<script>
+
+const API =
+'https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-professor';
+
+const $ = id => document.getElementById(id);
+
+const token =
+  sessionStorage.getItem('platform_access_token');
+
+const role =
+  sessionStorage.getItem('platform_role');
+
+if(!token || role !== 'professor'){
+  location.href = 'plataforma.html';
+}
+
+async function call(body){
+
+  const response = await fetch(
+    API,
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + token
+      },
+      body:JSON.stringify(body)
+    }
+  );
+
+  const data = await response.json();
+
+  if(!response.ok){
+    throw new Error(data.error || 'erro');
+  }
+
+  return data;
+}
+
+function logout(){
+
+  sessionStorage.removeItem(
+    'platform_access_token'
+  );
+
+  sessionStorage.removeItem(
+    'platform_refresh_token'
+  );
+
+  sessionStorage.removeItem(
+    'platform_role'
+  );
+
+  sessionStorage.removeItem(
+    'platform_profile'
+  );
+
+  location.href = 'plataforma.html';
+}
+
+function renderCourses(courses){
+
+  if(!courses || !courses.length){
+
+    $('courses').innerHTML =
+      '<div class="empty">' +
+      'Nenhuma disciplina vinculada ao seu perfil.' +
+      '</div>';
+
+    return;
+  }
+
+  $('courses').innerHTML =
+    courses.map(course => {
+
+      let action = '';
+
+      if(course.code === 'GIS2'){
+
+        action =
+          '<div class="actions">' +
+          '<a class="btn light" href="admin-v3.html">' +
+          'Abrir painel GIS II' +
+          '</a>' +
+          '</div>';
+      }
+
+      return `
+        <div class="card course">
+
+          <span class="badge">
+            ${course.code || 'DISCIPLINA'}
+          </span>
+
+          <h3>
+            ${course.name}
+          </h3>
+
+          <div class="muted">
+            Disciplina vinculada ao seu perfil docente.
+          </div>
+
+          ${action}
+
+        </div>
+      `;
+
+    }).join('');
+}
+
+function renderAssessments(assessments){
+
+  if(!assessments || !assessments.length){
+
+    $('assessments').innerHTML = `
+      <div class="empty">
+
+        Nenhuma avaliação cadastrada ainda.
+
+        <br><br>
+
+        O próximo módulo da plataforma permitirá criar
+        uma nova avaliação a partir da Skill Oficial,
+        construir o blueprint e gerar todo o pacote
+        pré-aplicação.
+
+      </div>
+    `;
+
+    return;
+  }
+
+  $('assessments').innerHTML =
+    assessments.map(a => {
+
+      const points =
+        a.total_points === null ||
+        a.total_points === undefined
+        ? '–'
+        : a.total_points;
+
+      return `
+        <div class="assessment">
+
+          <strong>
+            ${a.title}
+          </strong>
+
+          <div class="muted"
+               style="margin-top:5px">
+
+            Status: ${a.status}
+
+            <br>
+
+            ${a.objective_count}
+            questões objetivas
+
+            +
+
+            ${a.discursive_count}
+            discursivas
+
+            •
+
+            ${points} pontos
+
+          </div>
+
+        </div>
+      `;
+
+    }).join('');
+}
+
+async function initialize(){
+
+  try{
+
+    const data =
+      await call({
+        action:'home'
+      });
+
+    $('welcome').textContent =
+      'Olá, ' + data.profile.full_name;
+
+    $('idline').textContent =
+      'Matrícula: ' +
+      data.profile.institutional_id;
+
+    renderCourses(
+      data.courses || []
+    );
+
+    renderAssessments(
+      data.assessments || []
+    );
+
+  }catch(error){
+
+    document.querySelector(
+      '.container'
+    ).innerHTML = `
+      <div class="error">
+
+        Não foi possível carregar sua Área do Professor.
+
+        <br><br>
+
+        Sua sessão pode ter expirado ou o usuário
+        ainda não possui permissão de professor.
+
+        <br><br>
+
+        <button class="light"
+                onclick="logout()">
+          Voltar ao login
+        </button>
+
+      </div>
+    `;
+  }
+}
+
+initialize();
+
+</script>
+
+</body>
+</html>
