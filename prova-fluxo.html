@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDOMED • Fluxo da Prova</title>
+
+<style>
+:root{
+  --p:#005b55;
+  --o:#f47c20;
+  --bg:#f3f7f6;
+  --line:#d8e4e2;
+  --muted:#657270;
+  --ok:#2e7d32;
+  --danger:#b3261e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:#17201f;
+}
+header{
+  background:#fff;
+  border-bottom:5px solid var(--p);
+  padding:15px 4%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+.brand{
+  color:var(--p);
+  font-size:21px;
+  font-weight:900;
+}
+.container{
+  max-width:1280px;
+  margin:24px auto;
+  padding:0 16px 50px;
+}
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 8px 28px #0000000d;
+}
+h1,h2,h3{color:var(--p)}
+.muted{
+  color:var(--muted);
+  line-height:1.5;
+}
+button,.btn{
+  border:0;
+  border-radius:9px;
+  padding:10px 14px;
+  font-weight:800;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-block;
+}
+.primary{background:var(--p);color:#fff}
+.secondary{background:#edf5f3;color:var(--p)}
+.orange{background:var(--o);color:#fff}
+.success{background:#edf7f4;color:var(--ok)}
+.danger{background:#fff0ee;color:var(--danger)}
+.status{
+  display:inline-block;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#edf5f3;
+  color:var(--p);
+  font-size:11px;
+  font-weight:900;
+}
+.steps{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+  margin:18px 0;
+}
+.step{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:13px;
+}
+.step b{
+  display:block;
+  color:var(--p);
+  margin-bottom:4px;
+}
+.step.done{
+  border-left:5px solid var(--ok);
+}
+.step.current{
+  border-left:5px solid var(--o);
+}
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.item{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px;
+  margin:9px 0;
+}
+.item h3{margin-top:0}
+textarea,input,select{
+  width:100%;
+  padding:10px;
+  border:1px solid #bcc9c6;
+  border-radius:9px;
+  font:inherit;
+}
+textarea{min-height:95px;resize:vertical}
+label{
+  display:block;
+  font-weight:700;
+  margin:9px 0 5px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:850px;
+}
+th{
+  background:var(--p);
+  color:#fff;
+  text-align:left;
+  padding:10px;
+}
+td{
+  border-bottom:1px solid var(--line);
+  padding:9px;
+  font-size:13px;
+}
+.scroll{overflow-x:auto}
+.notice{
+  background:#fff5eb;
+  border-left:5px solid var(--o);
+  padding:13px;
+  border-radius:9px;
+  margin-top:12px;
+}
+.okbox{
+  background:#edf7f4;
+  border-left:5px solid var(--ok);
+  padding:13px;
+  border-radius:9px;
+  margin-top:12px;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:14px;
+}
+.hide{display:none}
+@media(max-width:900px){
+  .steps,.grid2{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">IDOMED • Fluxo da Prova</div>
+
+  <div>
+    <a class="btn secondary" href="professor-area.html">
+      Área do Professor
+    </a>
+    <button class="secondary" onclick="logout()">Sair</button>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="card">
+  <h1 id="title">Carregando avaliação...</h1>
+  <div id="meta" class="muted"></div>
+</div>
+
+<div class="steps">
+  <div id="s1" class="step">
+    <b>1. Blueprint</b>
+    Planejamento e aprovação.
+  </div>
+  <div id="s2" class="step">
+    <b>2. Itens</b>
+    Preparação das questões.
+  </div>
+  <div id="s3" class="step">
+    <b>3. Auditoria</b>
+    Controle de qualidade.
+  </div>
+  <div id="s4" class="step">
+    <b>4. Aprovação</b>
+    Fechamento da prova.
+  </div>
+  <div id="s5" class="step">
+    <b>5. Pacote técnico</b>
+    Dossiê, prova e OMR.
+  </div>
+</div>
+
+<div class="card">
+  <h2>Blueprint</h2>
+
+  <div id="blueprint"></div>
+
+  <div class="actions">
+    <button class="primary" onclick="approveBlueprint()">
+      Aprovar blueprint
+    </button>
+
+    <button class="secondary" onclick="prepareItems()">
+      Preparar estrutura dos itens
+    </button>
+  </div>
+
+  <div id="blueprintMsg"></div>
+</div>
+
+<div class="card">
+  <h2>Itens da prova</h2>
+
+  <p class="muted">
+    Nesta etapa a plataforma prepara a estrutura dos itens conforme o blueprint.
+    O conteúdo textual das questões será produzido pelo Motor de IA conectado à Skill Oficial.
+  </p>
+
+  <div id="items"></div>
+</div>
+
+<div class="card">
+  <h2>Auditoria da prova</h2>
+
+  <p class="muted">
+    A auditoria verifica coerência com o blueprint, nível cognitivo,
+    estrutura das alternativas, plausibilidade dos distratores,
+    ausência de pistas e consistência pedagógica.
+  </p>
+
+  <div class="actions">
+    <button class="orange" onclick="runAudit()">
+      Executar auditoria
+    </button>
+
+    <button class="primary" onclick="approveExam()">
+      Aprovar prova
+    </button>
+  </div>
+
+  <div id="audit"></div>
+</div>
+
+<div class="card">
+  <h2>Pacote pré-aplicação</h2>
+
+  <p class="muted">
+    Após a aprovação, a plataforma prepara o conjunto institucional da avaliação.
+  </p>
+
+  <div class="actions">
+    <button class="primary" onclick="preparePackage()">
+      Preparar pacote técnico
+    </button>
+  </div>
+
+  <div id="package"></div>
+</div>
+
+</div>
+
+<script>
+
+const API =
+'https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-assessment-workflow';
+
+const token =
+sessionStorage.getItem('platform_access_token');
+
+if(
+  !token ||
+  sessionStorage.getItem('platform_role') !== 'professor'
+){
+  location.href='plataforma.html';
+}
+
+const $=id=>document.getElementById(id);
+
+let ASSESSMENT_ID = '';
+
+const params =
+new URLSearchParams(location.search);
+
+ASSESSMENT_ID =
+params.get('assessment_id') || '';
+
+if(!ASSESSMENT_ID){
+  alert('Avaliação não informada.');
+}
+
+async function call(body){
+  const response =
+  await fetch(
+    API,
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+token
+      },
+      body:JSON.stringify(body)
+    }
+  );
+
+  const data =
+  await response.json();
+
+  if(!response.ok){
+    throw new Error(data.error || 'erro');
+  }
+
+  return data;
+}
+
+function logout(){
+  sessionStorage.clear();
+  location.href='plataforma.html';
+}
+
+function markSteps(status){
+
+  ['s1','s2','s3','s4','s5']
+  .forEach(id=>{
+    $(id).classList.remove('done','current');
+  });
+
+  if(status==='blueprint'){
+    $('s1').classList.add('current');
+  }
+
+  if(status==='blueprint_approved'){
+    $('s1').classList.add('done');
+    $('s2').classList.add('current');
+  }
+
+  if(status==='items_ready'){
+    $('s1').classList.add('done');
+    $('s2').classList.add('done');
+    $('s3').classList.add('current');
+  }
+
+  if(status==='audited'){
+    $('s1').classList.add('done');
+    $('s2').classList.add('done');
+    $('s3').classList.add('done');
+    $('s4').classList.add('current');
+  }
+
+  if(status==='approved'){
+    $('s1').classList.add('done');
+    $('s2').classList.add('done');
+    $('s3').classList.add('done');
+    $('s4').classList.add('done');
+    $('s5').classList.add('current');
+  }
+
+  if(status==='package_ready'){
+    ['s1','s2','s3','s4','s5']
+    .forEach(id=>$(id).classList.add('done'));
+  }
+}
+
+function renderBlueprint(assessment){
+
+  const rows =
+  assessment.blueprint?.items || [];
+
+  $('blueprint').innerHTML = `
+    <div class="scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Questão</th>
+            <th>Tipo</th>
+            <th>Conteúdo</th>
+            <th>Objetivo</th>
+            <th>Bloom</th>
+            <th>Peso</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${
+            rows.map(item=>`
+              <tr>
+                <td>Q${item.number}</td>
+                <td>${item.type}</td>
+                <td>${item.content}</td>
+                <td>${item.objective}</td>
+                <td>${item.bloom}</td>
+                <td>${item.weight}</td>
+              </tr>
+            `).join('')
+          }
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function renderItems(items){
+
+  if(!items || !items.length){
+    $('items').innerHTML =
+    '<div class="notice">Itens ainda não preparados.</div>';
+    return;
+  }
+
+  $('items').innerHTML =
+  items.map(item=>`
+
+    <div class="item">
+
+      <h3>
+        Questão ${item.item_number}
+        <span class="status">
+          ${item.item_type}
+        </span>
+      </h3>
+
+      <div class="muted">
+        Bloom: ${item.bloom || '—'}
+      </div>
+
+      <label>Enunciado</label>
+      <textarea
+        id="stem_${item.id}"
+        placeholder="O Motor de IA preencherá o enunciado nesta etapa."
+      >${item.stem || ''}</textarea>
+
+      ${
+        item.item_type === 'Objetiva'
+        ?
+        `
+        <div class="grid2">
+
+          <div>
+            <label>Alternativa A</label>
+            <input id="a_${item.id}" value="${item.option_a || ''}">
+          </div>
+
+          <div>
+            <label>Alternativa B</label>
+            <input id="b_${item.id}" value="${item.option_b || ''}">
+          </div>
+
+          <div>
+            <label>Alternativa C</label>
+            <input id="c_${item.id}" value="${item.option_c || ''}">
+          </div>
+
+          <div>
+            <label>Alternativa D</label>
+            <input id="d_${item.id}" value="${item.option_d || ''}">
+          </div>
+
+          <div>
+            <label>Alternativa E</label>
+            <input id="e_${item.id}" value="${item.option_e || ''}">
+          </div>
+
+          <div>
+            <label>Resposta correta</label>
+            <select id="key_${item.id}">
+              <option value="">Selecione</option>
+              ${['A','B','C','D','E'].map(x=>`
+                <option
+                  value="${x}"
+                  ${item.correct_answer===x?'selected':''}>
+                  ${x}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+
+        </div>
+        `
+        :
+        `
+        <label>Rubrica / resposta esperada</label>
+        <textarea id="rubric_${item.id}">
+          ${item.rubric || ''}
+        </textarea>
+        `
+      }
+
+      <label>Justificativa pedagógica</label>
+      <textarea id="just_${item.id}">
+        ${item.justification || ''}
+      </textarea>
+
+      <div class="actions">
+        <button
+          class="secondary"
+          onclick="saveItem('${item.id}','${item.item_type}')">
+          Salvar questão
+        </button>
+      </div>
+
+    </div>
+
+  `).join('');
+}
+
+async function saveItem(id,type){
+
+  const body={
+    action:'save_item',
+    assessment_id:ASSESSMENT_ID,
+    item_id:id,
+    stem:$('stem_'+id).value,
+    justification:$('just_'+id).value
+  };
+
+  if(type==='Objetiva'){
+    body.option_a=$('a_'+id).value;
+    body.option_b=$('b_'+id).value;
+    body.option_c=$('c_'+id).value;
+    body.option_d=$('d_'+id).value;
+    body.option_e=$('e_'+id).value;
+    body.correct_answer=$('key_'+id).value;
+  }else{
+    body.rubric=$('rubric_'+id).value;
+  }
+
+  try{
+    await call(body);
+    alert('Questão salva.');
+  }catch(e){
+    alert('Erro ao salvar questão: '+e.message);
+  }
+}
+
+async function load(){
+
+  try{
+
+    const data =
+    await call({
+      action:'get_assessment',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    const a=data.assessment;
+
+    $('title').textContent=a.title;
+
+    $('meta').textContent=
+      `${a.assessment_type || 'Avaliação'} • `+
+      `${a.objective_count} objetivas + `+
+      `${a.discursive_count} discursivas • `+
+      `${a.total_points} pontos`;
+
+    renderBlueprint(a);
+
+    renderItems(data.items || []);
+
+    renderAudit(data.audit || []);
+
+    renderPackage(data.package || []);
+
+    markSteps(data.workflow_status || a.status);
+
+  }catch(e){
+
+    alert(
+      'Não foi possível carregar a avaliação: '+
+      e.message
+    );
+  }
+}
+
+async function approveBlueprint(){
+
+  try{
+
+    await call({
+      action:'approve_blueprint',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    $('blueprintMsg').innerHTML=
+    '<div class="okbox">Blueprint aprovado.</div>';
+
+    await load();
+
+  }catch(e){
+
+    $('blueprintMsg').innerHTML=
+    '<div class="notice">Erro: '+e.message+'</div>';
+  }
+}
+
+async function prepareItems(){
+
+  try{
+
+    await call({
+      action:'prepare_items',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    $('blueprintMsg').innerHTML=
+    '<div class="okbox">Estrutura dos itens preparada.</div>';
+
+    await load();
+
+  }catch(e){
+
+    $('blueprintMsg').innerHTML=
+    '<div class="notice">Erro: '+e.message+'</div>';
+  }
+}
+
+async function runAudit(){
+
+  try{
+
+    const data=
+    await call({
+      action:'run_audit',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    renderAudit(data.audit || []);
+
+    await load();
+
+  }catch(e){
+
+    $('audit').innerHTML=
+    '<div class="notice">Erro: '+e.message+'</div>';
+  }
+}
+
+function renderAudit(audit){
+
+  if(!audit || !audit.length){
+
+    $('audit').innerHTML=
+    '<div class="notice">Auditoria ainda não executada.</div>';
+
+    return;
+  }
+
+  $('audit').innerHTML=
+  audit.map(row=>`
+
+    <div class="item">
+
+      <strong>
+        ${row.check_name}
+      </strong>
+
+      <div class="muted">
+        ${row.result}
+      </div>
+
+    </div>
+
+  `).join('');
+}
+
+async function approveExam(){
+
+  try{
+
+    await call({
+      action:'approve_exam',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    alert('Prova aprovada.');
+
+    await load();
+
+  }catch(e){
+
+    alert(
+      'Não foi possível aprovar a prova: '+
+      e.message
+    );
+  }
+}
+
+async function preparePackage(){
+
+  try{
+
+    const data=
+    await call({
+      action:'prepare_package',
+      assessment_id:ASSESSMENT_ID
+    });
+
+    renderPackage(
+      data.package || []
+    );
+
+    await load();
+
+  }catch(e){
+
+    $('package').innerHTML=
+    '<div class="notice">Erro: '+e.message+'</div>';
+  }
+}
+
+function renderPackage(items){
+
+  if(!items || !items.length){
+
+    $('package').innerHTML=
+    '<div class="notice">Pacote ainda não preparado.</div>';
+
+    return;
+  }
+
+  $('package').innerHTML=
+  items.map(item=>`
+
+    <div class="item">
+
+      <strong>
+        ${item.document_type}
+      </strong>
+
+      <div class="muted">
+        Status:
+        ${item.status}
+      </div>
+
+    </div>
+
+  `).join('');
+}
+
+load();
+
+</script>
+
+</body>
+</html>
