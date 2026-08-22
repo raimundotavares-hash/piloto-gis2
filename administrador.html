@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDOMED • Administração da Plataforma</title>
+
+<style>
+:root{
+  --p:#005b55;
+  --o:#f47c20;
+  --bg:#f3f7f6;
+  --line:#d8e4e2;
+  --muted:#657270;
+  --red:#b3261e;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:#17201f;
+}
+
+header{
+  background:#fff;
+  border-bottom:5px solid var(--o);
+  padding:15px 4%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.brand{
+  color:var(--p);
+  font-size:21px;
+  font-weight:900;
+}
+
+.container{
+  max-width:1320px;
+  margin:25px auto;
+  padding:0 16px 40px;
+}
+
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 8px 28px #00000010;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:.8fr 1.2fr;
+  gap:16px;
+}
+
+h1,h2,h3{
+  color:var(--p);
+}
+
+label{
+  display:block;
+  font-weight:700;
+  margin:9px 0 5px;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  border:1px solid #bcc9c6;
+  border-radius:9px;
+  font-size:14px;
+}
+
+button{
+  border:0;
+  border-radius:9px;
+  padding:10px 13px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+.btn{
+  background:var(--p);
+  color:#fff;
+}
+
+.light{
+  background:#edf5f3;
+  color:var(--p);
+}
+
+.danger{
+  background:#fff0ee;
+  color:var(--red);
+}
+
+.muted{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.courses{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+
+.chip{
+  padding:6px 9px;
+  border-radius:999px;
+  background:#edf5f3;
+  color:var(--p);
+  font-size:12px;
+}
+
+.user{
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  margin:9px 0;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:flex-start;
+  flex-wrap:wrap;
+}
+
+.roles{
+  font-size:11px;
+  font-weight:800;
+  color:var(--o);
+  margin-top:4px;
+}
+
+.status{
+  font-size:11px;
+  font-weight:800;
+}
+
+.active{
+  color:#2e7d32;
+}
+
+.inactive{
+  color:var(--red);
+}
+
+.coursechecks{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.coursechecks label{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin:0;
+  padding:7px 9px;
+  background:#f5f9f8;
+  border:1px solid var(--line);
+  border-radius:9px;
+  font-weight:600;
+}
+
+.coursechecks input{
+  width:auto;
+}
+
+.error{
+  background:#fff4e9;
+  border-left:5px solid var(--o);
+  padding:14px;
+  border-radius:9px;
+}
+
+@media(max-width:900px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    IDOMED • Administração da Plataforma
+  </div>
+
+  <button class="light" onclick="logout()">
+    Sair
+  </button>
+</header>
+
+<div class="container">
+
+  <div class="grid">
+
+    <div class="card">
+
+      <h2>Adicionar professor</h2>
+
+      <label>Nome completo</label>
+      <input id="name">
+
+      <label>Matrícula / identificação institucional</label>
+      <input id="inst">
+
+      <label>E-mail</label>
+      <input id="email" type="email">
+
+      <label>Senha temporária</label>
+      <input id="temp" type="password">
+
+      <label>Disciplinas</label>
+
+      <div
+        id="courseChecks"
+        class="coursechecks">
+      </div>
+
+      <button
+        class="btn"
+        style="margin-top:14px"
+        onclick="createProfessor()">
+        Cadastrar professor
+      </button>
+
+      <p class="muted">
+        Utilize uma senha temporária com pelo menos
+        8 caracteres. O professor poderá usar essa
+        senha no primeiro acesso.
+      </p>
+
+    </div>
+
+    <div class="card">
+
+      <div class="row">
+
+        <h2 style="margin-top:0">
+          Professores cadastrados
+        </h2>
+
+        <button
+          class="light"
+          onclick="load()">
+          Atualizar
+        </button>
+
+      </div>
+
+      <div id="users">
+        <div class="muted">
+          Carregando usuários...
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const API =
+'https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-admin';
+
+const $ =
+  id => document.getElementById(id);
+
+const token =
+  sessionStorage.getItem(
+    'platform_access_token'
+  );
+
+const role =
+  sessionStorage.getItem(
+    'platform_role'
+  );
+
+if(!token || role !== 'admin'){
+  location.href =
+    'plataforma.html';
+}
+
+let DATA = {};
+
+async function call(body){
+
+  const response = await fetch(
+    API,
+    {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer ' + token
+      },
+      body:JSON.stringify(body)
+    }
+  );
+
+  const data =
+    await response.json();
+
+  if(!response.ok){
+    throw new Error(
+      data.error || 'erro'
+    );
+  }
+
+  return data;
+}
+
+function logout(){
+
+  sessionStorage.removeItem(
+    'platform_access_token'
+  );
+
+  sessionStorage.removeItem(
+    'platform_refresh_token'
+  );
+
+  sessionStorage.removeItem(
+    'platform_role'
+  );
+
+  sessionStorage.removeItem(
+    'platform_profile'
+  );
+
+  location.href =
+    'plataforma.html';
+}
+
+async function load(){
+
+  DATA =
+    await call({
+      action:'overview'
+    });
+
+  const courses =
+    DATA.courses || [];
+
+  $('courseChecks').innerHTML =
+    courses.map(course => `
+
+      <label>
+
+        <input
+          type="checkbox"
+          value="${course.id}"
+        >
+
+        ${course.name}
+
+      </label>
+
+    `).join('');
+
+  renderUsers();
+}
+
+function roles(userId){
+
+  return (
+    DATA.roles || []
+  )
+  .filter(
+    role =>
+      role.user_id === userId
+  )
+  .map(
+    role => role.role
+  )
+  .join(', ');
+}
+
+function linkedCourses(userId){
+
+  const courseIds =
+    (
+      DATA.links || []
+    )
+    .filter(
+      link =>
+        link.teacher_id === userId
+    )
+    .map(
+      link =>
+        link.course_id
+    );
+
+  return (
+    DATA.courses || []
+  )
+  .filter(
+    course =>
+      courseIds.includes(
+        course.id
+      )
+  )
+  .map(
+    course =>
+      course.name
+  );
+}
+
+function renderUsers(){
+
+  const profiles =
+    DATA.profiles || [];
+
+  if(!profiles.length){
+
+    $('users').innerHTML =
+      '<div class="muted">' +
+      'Nenhum usuário cadastrado.' +
+      '</div>';
+
+    return;
+  }
+
+  $('users').innerHTML =
+    profiles.map(user => {
+
+      const userRoles =
+        roles(user.id);
+
+      const courses =
+        linkedCourses(
+          user.id
+        );
+
+      return `
+
+        <div class="user">
+
+          <div class="row">
+
+            <div>
+
+              <strong>
+                ${user.full_name}
+              </strong>
+
+              <div class="muted">
+                ${user.institutional_id}
+                •
+                ${user.email || ''}
+              </div>
+
+              <div class="roles">
+                ${userRoles || 'sem papel'}
+              </div>
+
+              <div class="courses">
+
+                ${
+                  courses.map(
+                    course =>
+                    `<span class="chip">
+                      ${course}
+                    </span>`
+                  ).join('')
+                }
+
+              </div>
+
+            </div>
+
+            <div>
+
+              <div
+                class="status
+                ${
+                  user.active
+                  ? 'active'
+                  : 'inactive'
+                }">
+
+                ${
+                  user.active
+                  ? 'ATIVO'
+                  : 'INATIVO'
+                }
+
+              </div>
+
+              <button
+                class="
+                ${
+                  user.active
+                  ? 'danger'
+                  : 'light'
+                }"
+                style="margin-top:7px"
+
+                onclick="
+                  setActive(
+                    '${user.id}',
+                    ${!user.active}
+                  )
+                ">
+
+                ${
+                  user.active
+                  ? 'Desativar'
+                  : 'Reativar'
+                }
+
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join('');
+}
+
+async function createProfessor(){
+
+  const selectedCourses =
+    [
+      ...document.querySelectorAll(
+        '#courseChecks input:checked'
+      )
+    ]
+    .map(
+      input =>
+        input.value
+    );
+
+  const institutional_id =
+    $('inst').value.trim();
+
+  const full_name =
+    $('name').value.trim();
+
+  const email =
+    $('email').value.trim();
+
+  const temporary_password =
+    $('temp').value;
+
+  if(
+    !institutional_id ||
+    !full_name ||
+    !email ||
+    !temporary_password
+  ){
+
+    alert(
+      'Preencha nome, matrícula, e-mail e senha temporária.'
+    );
+
+    return;
+  }
+
+  if(
+    temporary_password.length < 8
+  ){
+
+    alert(
+      'A senha temporária precisa ter pelo menos 8 caracteres.'
+    );
+
+    return;
+  }
+
+  try{
+
+    const result =
+      await call({
+        action:'create_professor',
+        institutional_id,
+        full_name,
+        email,
+        temporary_password
+      });
+
+    for(
+      const course_id
+      of selectedCourses
+    ){
+
+      await call({
+        action:'assign_course',
+        user_id:
+          result.user_id,
+        course_id,
+        enabled:true
+      });
+    }
+
+    alert(
+      'Professor cadastrado com sucesso.'
+    );
+
+    $('name').value='';
+    $('inst').value='';
+    $('email').value='';
+    $('temp').value='';
+
+    await load();
+
+  }catch(error){
+
+    alert(
+      'Não foi possível cadastrar o professor. Verifique se a matrícula ou o e-mail já estão cadastrados.'
+    );
+  }
+}
+
+async function setActive(
+  userId,
+  active
+){
+
+  const message =
+    active
+    ? 'Reativar este usuário?'
+    : 'Desativar este usuário?';
+
+  if(
+    !confirm(message)
+  ){
+    return;
+  }
+
+  try{
+
+    await call({
+      action:'set_active',
+      user_id:userId,
+      active
+    });
+
+    await load();
+
+  }catch(error){
+
+    alert(
+      'Não foi possível alterar o status do usuário.'
+    );
+  }
+}
+
+load().catch(
+  error => {
+
+    document.querySelector(
+      '.container'
+    ).innerHTML = `
+
+      <div class="error">
+
+        Não foi possível acessar a
+        Administração da Plataforma.
+
+        <br><br>
+
+        Sua sessão pode ter expirado
+        ou este usuário não possui
+        permissão administrativa.
+
+        <br><br>
+
+        <button
+          class="light"
+          onclick="logout()">
+          Voltar ao login
+        </button>
+
+      </div>
+    `;
+  }
+);
+
+</script>
+
+</body>
+</html>
