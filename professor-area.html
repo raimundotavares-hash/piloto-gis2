@@ -14,14 +14,12 @@
   --muted:#657270;
 }
 *{box-sizing:border-box}
-
 body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
   background:var(--bg);
   color:#17201f;
 }
-
 header{
   background:#fff;
   border-bottom:5px solid var(--p);
@@ -29,45 +27,33 @@ header{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  gap:12px;
 }
-
 .brand{
   color:var(--p);
   font-size:21px;
   font-weight:900;
 }
-
 .container{
-  max-width:1250px;
-  margin:25px auto;
+  max-width:1260px;
+  margin:24px auto;
   padding:0 16px 40px;
 }
-
-.hero,
-.card{
+.hero,.card{
   background:#fff;
   border:1px solid var(--line);
   border-radius:16px;
   box-shadow:0 8px 28px #00000010;
 }
-
 .hero{
   padding:22px;
-  margin-bottom:18px;
 }
-
-.hero h1{
+h1,h2,h3{
   color:var(--p);
-  margin:0 0 6px;
 }
-
 .muted{
   color:var(--muted);
 }
-
-button,
-.btn{
+button,.btn{
   border:0;
   border-radius:9px;
   padding:10px 14px;
@@ -76,79 +62,108 @@ button,
   text-decoration:none;
   display:inline-block;
 }
-
+.primary{
+  background:var(--p);
+  color:#fff;
+}
 .light{
   background:#edf5f3;
   color:var(--p);
 }
-
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin:18px 0;
+}
+.stat{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:15px;
+}
+.stat span{
+  font-size:12px;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.stat b{
+  display:block;
+  font-size:28px;
+  color:var(--p);
+  margin-top:4px;
+}
+.tabs{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:18px 0;
+}
+.tab{
+  background:#edf5f3;
+  color:var(--p);
+}
+.tab.active{
+  background:var(--p);
+  color:#fff;
+}
+.pane{
+  display:none;
+}
+.pane.active{
+  display:block;
+}
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:14px;
 }
-
 .card{
   padding:18px;
 }
-
 .course{
   border-left:6px solid var(--p);
-  min-height:180px;
-  display:flex;
-  flex-direction:column;
 }
-
-.course h3{
-  color:var(--p);
-  margin:10px 0 7px;
-}
-
 .badge{
-  width:max-content;
+  display:inline-block;
   font-size:11px;
-  background:#edf5f3;
-  color:var(--p);
   padding:5px 8px;
   border-radius:999px;
+  background:#edf5f3;
+  color:var(--p);
   font-weight:800;
 }
-
-.course .actions{
-  margin-top:auto;
-  padding-top:12px;
+.empty{
+  padding:18px;
+  border:1px dashed #b9c9c6;
+  border-radius:12px;
+  background:#fff;
+  color:var(--muted);
 }
-
-.assessment{
+.item{
   padding:14px;
   border:1px solid var(--line);
   border-radius:12px;
   background:#fff;
   margin:9px 0;
 }
-
-.empty{
-  padding:18px;
-  border:1px dashed #b9c9c6;
-  border-radius:12px;
+.small{
+  font-size:12px;
   color:var(--muted);
-  background:#fff;
 }
-
-.error{
-  background:#fff4e9;
-  border-left:5px solid var(--o);
-  padding:14px;
-  border-radius:9px;
-}
-
-.section-title{
-  color:var(--p);
-  margin-top:24px;
-}
-
-@media(max-width:850px){
+@media(max-width:900px){
   .grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:550px){
+  .stats{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -163,21 +178,113 @@ button,
 <div class="container">
 
   <div class="hero">
-    <h1 id="welcome">Área do Professor</h1>
-    <div id="idline" class="muted">
-      Carregando identificação...
+    <div class="top">
+
+      <div>
+        <h1 id="welcome">Área do Professor</h1>
+        <div id="idline" class="muted">
+          Carregando identificação...
+        </div>
+      </div>
+
+      <a class="btn primary" href="avaliacao.html">
+        + Nova avaliação
+      </a>
+
     </div>
   </div>
 
-  <h2 class="section-title">Minhas disciplinas</h2>
-  <div id="courses" class="grid">
-    <div class="empty">Carregando disciplinas...</div>
+  <div class="stats">
+
+    <div class="stat">
+      <span>Disciplinas</span>
+      <b id="sCourses">–</b>
+    </div>
+
+    <div class="stat">
+      <span>Turmas</span>
+      <b id="sClasses">–</b>
+    </div>
+
+    <div class="stat">
+      <span>Estudantes</span>
+      <b id="sStudents">–</b>
+    </div>
+
+    <div class="stat">
+      <span>Avaliações</span>
+      <b id="sAssessments">–</b>
+    </div>
+
   </div>
 
-  <h2 class="section-title">Minhas avaliações</h2>
-  <div id="assessments">
-    <div class="empty">Carregando avaliações...</div>
+  <div class="tabs">
+
+    <button class="tab active"
+            onclick="openTab('courses',this)">
+      Disciplinas
+    </button>
+
+    <button class="tab"
+            onclick="openTab('classes',this)">
+      Turmas
+    </button>
+
+    <button class="tab"
+            onclick="openTab('assessments',this)">
+      Avaliações
+    </button>
+
+    <button class="tab"
+            onclick="openTab('results',this)">
+      Resultados
+    </button>
+
   </div>
+
+  <section id="courses" class="pane active">
+    <div id="coursesGrid" class="grid"></div>
+  </section>
+
+  <section id="classes" class="pane">
+    <div id="classesList"></div>
+  </section>
+
+  <section id="assessments" class="pane">
+
+    <div class="top">
+
+      <h2>Minhas avaliações</h2>
+
+      <a class="btn primary" href="avaliacao.html">
+        + Nova avaliação
+      </a>
+
+    </div>
+
+    <div id="assessmentsList"></div>
+
+  </section>
+
+  <section id="results" class="pane">
+
+    <div class="card">
+
+      <h2>Resultados e análises</h2>
+
+      <p class="muted">
+        Os resultados das novas avaliações aparecerão aqui
+        após a aplicação. O piloto GIS II permanece disponível
+        no painel analítico já validado.
+      </p>
+
+      <a class="btn light" href="admin-v3.html">
+        Abrir painel GIS II
+      </a>
+
+    </div>
+
+  </section>
 
 </div>
 
@@ -186,36 +293,48 @@ button,
 const API =
 'https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-professor';
 
-const $ = id => document.getElementById(id);
+const $ =
+id => document.getElementById(id);
 
 const token =
-  sessionStorage.getItem('platform_access_token');
+sessionStorage.getItem(
+  'platform_access_token'
+);
 
-const role =
-  sessionStorage.getItem('platform_role');
-
-if(!token || role !== 'professor'){
-  location.href = 'plataforma.html';
+if(
+  !token ||
+  sessionStorage.getItem(
+    'platform_role'
+  ) !== 'professor'
+){
+  location.href =
+  'plataforma.html';
 }
 
 async function call(body){
 
-  const response = await fetch(
+  const response =
+  await fetch(
     API,
     {
       method:'POST',
       headers:{
         'Content-Type':'application/json',
-        'Authorization':'Bearer ' + token
+        'Authorization':
+        'Bearer ' + token
       },
-      body:JSON.stringify(body)
+      body:
+      JSON.stringify(body)
     }
   );
 
-  const data = await response.json();
+  const data =
+  await response.json();
 
   if(!response.ok){
-    throw new Error(data.error || 'erro');
+    throw new Error(
+      data.error || 'erro'
+    );
   }
 
   return data;
@@ -223,138 +342,80 @@ async function call(body){
 
 function logout(){
 
-  sessionStorage.removeItem(
-    'platform_access_token'
-  );
+  sessionStorage.clear();
 
-  sessionStorage.removeItem(
-    'platform_refresh_token'
-  );
-
-  sessionStorage.removeItem(
-    'platform_role'
-  );
-
-  sessionStorage.removeItem(
-    'platform_profile'
-  );
-
-  location.href = 'plataforma.html';
+  location.href =
+  'plataforma.html';
 }
 
-function renderCourses(courses){
+function openTab(
+  id,
+  button
+){
 
-  if(!courses || !courses.length){
+  document
+  .querySelectorAll(
+    '.pane'
+  )
+  .forEach(
+    item =>
+    item.classList.remove(
+      'active'
+    )
+  );
 
-    $('courses').innerHTML =
-      '<div class="empty">' +
-      'Nenhuma disciplina vinculada ao seu perfil.' +
-      '</div>';
+  $(id)
+  .classList.add(
+    'active'
+  );
 
-    return;
-  }
+  document
+  .querySelectorAll(
+    '.tab'
+  )
+  .forEach(
+    item =>
+    item.classList.remove(
+      'active'
+    )
+  );
 
-  $('courses').innerHTML =
-    courses.map(course => {
-
-      let action = '';
-
-      if(course.code === 'GIS2'){
-
-        action =
-          '<div class="actions">' +
-          '<a class="btn light" href="admin-v3.html">' +
-          'Abrir painel GIS II' +
-          '</a>' +
-          '</div>';
-      }
-
-      return `
-        <div class="card course">
-
-          <span class="badge">
-            ${course.code || 'DISCIPLINA'}
-          </span>
-
-          <h3>
-            ${course.name}
-          </h3>
-
-          <div class="muted">
-            Disciplina vinculada ao seu perfil docente.
-          </div>
-
-          ${action}
-
-        </div>
-      `;
-
-    }).join('');
+  button
+  .classList.add(
+    'active'
+  );
 }
 
-function renderAssessments(assessments){
+function courseName(
+  id,
+  courses
+){
 
-  if(!assessments || !assessments.length){
+  const course =
+  courses.find(
+    item =>
+    item.id === id
+  );
 
-    $('assessments').innerHTML = `
-      <div class="empty">
+  return course
+  ? course.name
+  : 'Disciplina';
+}
 
-        Nenhuma avaliação cadastrada ainda.
+function className(
+  id,
+  classes
+){
 
-        <br><br>
+  const item =
+  classes.find(
+    value =>
+    value.id === id
+  );
 
-        O próximo módulo da plataforma permitirá criar
-        uma nova avaliação a partir da Skill Oficial,
-        construir o blueprint e gerar todo o pacote
-        pré-aplicação.
-
-      </div>
-    `;
-
-    return;
-  }
-
-  $('assessments').innerHTML =
-    assessments.map(a => {
-
-      const points =
-        a.total_points === null ||
-        a.total_points === undefined
-        ? '–'
-        : a.total_points;
-
-      return `
-        <div class="assessment">
-
-          <strong>
-            ${a.title}
-          </strong>
-
-          <div class="muted"
-               style="margin-top:5px">
-
-            Status: ${a.status}
-
-            <br>
-
-            ${a.objective_count}
-            questões objetivas
-
-            +
-
-            ${a.discursive_count}
-            discursivas
-
-            •
-
-            ${points} pontos
-
-          </div>
-
-        </div>
-      `;
-
-    }).join('');
+  return item
+  ? item.name
+  : 'Sem turma';
 }
 
 async function initialize(){
@@ -362,49 +423,248 @@ async function initialize(){
   try{
 
     const data =
-      await call({
-        action:'home'
-      });
+    await call({
+      action:'home'
+    });
 
     $('welcome').textContent =
-      'Olá, ' + data.profile.full_name;
+    'Olá, ' +
+    data.profile.full_name;
 
     $('idline').textContent =
-      'Matrícula: ' +
-      data.profile.institutional_id;
+    'Matrícula: ' +
+    data.profile.institutional_id;
 
-    renderCourses(
-      data.courses || []
-    );
+    const summary =
+    data.summary || {};
 
-    renderAssessments(
-      data.assessments || []
-    );
+    $('sCourses').textContent =
+    summary.courses ?? 0;
+
+    $('sClasses').textContent =
+    summary.classes ?? 0;
+
+    $('sStudents').textContent =
+    summary.students ?? 0;
+
+    $('sAssessments').textContent =
+    summary.assessments ?? 0;
+
+    const courses =
+    data.courses || [];
+
+    const classes =
+    data.classes || [];
+
+    const assessments =
+    data.assessments || [];
+
+    if(courses.length){
+
+      $('coursesGrid').innerHTML =
+
+      courses.map(
+        course => {
+
+          const totalClasses =
+          classes.filter(
+            item =>
+            item.course_id ===
+            course.id
+          ).length;
+
+          return `
+
+          <div class="card course">
+
+            <span class="badge">
+              ${course.code || ''}
+            </span>
+
+            <h3>
+              ${course.name}
+            </h3>
+
+            <p class="muted">
+              ${totalClasses}
+              turma(s) cadastrada(s).
+            </p>
+
+            ${
+              course.code === 'GIS2'
+              ?
+              `
+              <a
+                class="btn light"
+                href="admin-v3.html">
+                Painel GIS II
+              </a>
+              `
+              :
+              ''
+            }
+
+          </div>
+
+          `;
+
+        }
+      ).join('');
+
+    }else{
+
+      $('coursesGrid').innerHTML =
+      '<div class="empty">' +
+      'Nenhuma disciplina vinculada.' +
+      '</div>';
+
+    }
+
+    if(classes.length){
+
+      $('classesList').innerHTML =
+
+      classes.map(
+        item => `
+
+          <div class="item">
+
+            <strong>
+              ${item.name}
+            </strong>
+
+            <div class="small">
+
+              ${
+                courseName(
+                  item.course_id,
+                  courses
+                )
+              }
+
+              •
+
+              ${
+                item.term ||
+                'Período não informado'
+              }
+
+              •
+
+              ${
+                item.student_count || 0
+              }
+              estudante(s)
+
+            </div>
+
+          </div>
+
+        `
+      ).join('');
+
+    }else{
+
+      $('classesList').innerHTML =
+      '<div class="empty">' +
+      'Nenhuma turma cadastrada. ' +
+      'Use “+ Nova avaliação” para cadastrar a primeira.' +
+      '</div>';
+
+    }
+
+    if(assessments.length){
+
+      $('assessmentsList').innerHTML =
+
+      assessments.map(
+        item => `
+
+          <div class="item">
+
+            <div class="top">
+
+              <div>
+
+                <strong>
+                  ${item.title}
+                </strong>
+
+                <div class="small">
+
+                  ${
+                    courseName(
+                      item.course_id,
+                      courses
+                    )
+                  }
+
+                  •
+
+                  ${
+                    className(
+                      item.class_id,
+                      classes
+                    )
+                  }
+
+                  •
+
+                  ${item.objective_count}
+                  objetivas
+
+                  +
+
+                  ${item.discursive_count}
+                  discursivas
+
+                  •
+
+                  ${
+                    item.total_points ?? '–'
+                  }
+                  pontos
+
+                </div>
+
+              </div>
+
+              <span class="badge">
+                ${item.status}
+              </span>
+
+            </div>
+
+          </div>
+
+        `
+      ).join('');
+
+    }else{
+
+      $('assessmentsList').innerHTML =
+      '<div class="empty">' +
+      'Nenhuma avaliação criada ainda. ' +
+      'Clique em “+ Nova avaliação”.' +
+      '</div>';
+
+    }
 
   }catch(error){
 
-    document.querySelector(
+    document
+    .querySelector(
       '.container'
-    ).innerHTML = `
-      <div class="error">
+    )
+    .innerHTML =
 
-        Não foi possível carregar sua Área do Professor.
+    '<div class="empty">' +
+    'Não foi possível carregar sua Área do Professor. ' +
+    'Faça login novamente.' +
+    '</div>';
 
-        <br><br>
-
-        Sua sessão pode ter expirado ou o usuário
-        ainda não possui permissão de professor.
-
-        <br><br>
-
-        <button class="light"
-                onclick="logout()">
-          Voltar ao login
-        </button>
-
-      </div>
-    `;
   }
+
 }
 
 initialize();
