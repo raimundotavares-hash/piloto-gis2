@@ -694,6 +694,22 @@ function renderBlueprint(assessment){
 
   const blueprint=assessment.blueprint;
   const items=blueprint.items || [];
+  const navigation=assessment.id
+    ? `
+      <div class="actions">
+        <a
+          class="btn primary"
+          href="prova-fluxo.html?assessment_id=${encodeURIComponent(assessment.id)}">
+          Revisar e aprovar blueprint
+        </a>
+      </div>
+    `
+    : `
+      <div class="notice">
+        <strong>Erro de navegação:</strong>
+        não foi possível identificar esta avaliação.
+      </div>
+    `;
 
   $('blueprintArea').innerHTML=`
     <h3>Blueprint — ${assessment.title}</h3>
@@ -734,6 +750,8 @@ function renderBlueprint(assessment){
       <strong>Próxima etapa:</strong>
       revisar e aprovar o blueprint antes da elaboração definitiva dos itens.
     </div>
+
+    ${navigation}
   `;
 }
 

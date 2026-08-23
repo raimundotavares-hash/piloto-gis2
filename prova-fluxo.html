@@ -608,6 +608,22 @@ function markSteps(status){
 }
 
 
+function updateActionButtons(status){
+
+  const approveBlueprintButton =
+  $('approveBlueprintBtn');
+
+  const prepareItemsButton =
+  $('prepareItemsBtn');
+
+  approveBlueprintButton.disabled =
+  status !== 'blueprint';
+
+  prepareItemsButton.disabled =
+  status !== 'blueprint_approved';
+}
+
+
 function renderBlueprint(assessment){
 
   const rows =
@@ -1102,9 +1118,16 @@ async function load(){
       data.package || []
     );
 
+    const status =
+    data.workflow_status ||
+    assessment.status;
+
     markSteps(
-      data.workflow_status ||
-      assessment.status
+      status
+    );
+
+    updateActionButtons(
+      status
     );
 
   }catch(error){
