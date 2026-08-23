@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDOMED • Gerar Itens pela Skill Oficial</title>
+<style>
+:root{--p:#005b55;--o:#f47c20;--bg:#f3f7f6;--line:#d8e4e2;--muted:#657270;--ok:#2e7d32;--danger:#b3261e}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#17201f}header{background:#fff;border-bottom:5px solid var(--p);padding:15px 4%;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{color:var(--p);font-size:21px;font-weight:900}.container{max-width:900px;margin:30px auto;padding:0 16px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 8px 28px #0000000d}h1,h2{color:var(--p)}.muted{color:var(--muted);line-height:1.55}.btn,button{border:0;border-radius:9px;padding:12px 16px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}.primary{background:var(--p);color:#fff}.secondary{background:#edf5f3;color:var(--p)}button:disabled{opacity:.5;cursor:not-allowed}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.notice,.ok,.error{border-radius:9px;padding:14px;margin-top:16px}.notice{background:#fff5eb;border-left:5px solid var(--o)}.ok{background:#edf7f4;border-left:5px solid var(--ok)}.error{background:#fff0ee;border-left:5px solid var(--danger)}.spinner{display:inline-block;width:16px;height:16px;border:2px solid #ffffff80;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-3px;margin-right:8px}@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<header><div class="brand">IDOMED • Motor da Skill Oficial</div><div><a class="btn secondary" id="backTop" href="professor-area.html">Área do Professor</a></div></header>
+<div class="container"><div class="card">
+<h1>Gerar questões pela Skill Oficial</h1>
+<p class="muted">Esta etapa usa o blueprint já aprovado para elaborar automaticamente os 10 itens, preservando conteúdo, objetivo/competência, nível de Bloom e tipo de questão. As objetivas recebem cinco alternativas A–E, gabarito e justificativa; as discursivas recebem rubrica de correção.</p>
+<div id="meta" class="notice">Verificando a avaliação...</div>
+<div class="actions">
+<button id="generateBtn" class="primary" onclick="generateItems()" disabled>Gerar questões pela Skill Oficial</button>
+<a id="backBtn" class="btn secondary" href="professor-area.html">Voltar ao fluxo da prova</a>
+</div>
+<div id="result"></div>
+</div></div>
+<script>
+const ASSESSMENT_API='https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-assessment-workflow';
+const GENERATOR_API='https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-skill-generator';
+const token=sessionStorage.getItem('platform_access_token');
+const role=sessionStorage.getItem('platform_role');
+const $=id=>document.getElementById(id);
+const id=new URLSearchParams(location.search).get('assessment_id')||'';
+if(!token||role!=='professor')location.href='plataforma.html';
+if(!id){$('meta').className='error';$('meta').textContent='Avaliação não informada na URL.';throw new Error('assessment_id ausente')}
+const flowUrl='prova-fluxo.html?assessment_id='+encodeURIComponent(id);
+$('backBtn').href=flowUrl;$('backTop').href=flowUrl;
+async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Object.assign(new Error(d.message||d.detail||d.error||'Falha na solicitação'),{data:d,status:r.status});return d}
+async function init(){try{const d=await post(ASSESSMENT_API,{action:'get_assessment',assessment_id:id});const a=d.assessment;const items=d.items||[];$('meta').className='notice';$('meta').innerHTML='<strong>'+escapeHtml(a.title||'Avaliação')+'</strong><br>'+items.length+' itens preparados • status: '+escapeHtml(d.workflow_status||a.status||'—');$('generateBtn').disabled=items.length===0;if(items.some(x=>x.stem)){$('result').innerHTML='<div class="ok"><strong>Já existem itens gerados.</strong> Você pode gerar novamente somente se desejar substituir o conteúdo atual.</div>';}}
+catch(e){$('meta').className='error';$('meta').textContent='Não foi possível carregar a avaliação: '+e.message;}}
+async function generateItems(){const b=$('generateBtn');b.disabled=true;b.innerHTML='<span class="spinner"></span>Gerando os 10 itens...';$('result').innerHTML='<div class="notice">A Skill Oficial está elaborando e validando a prova. Aguarde a conclusão desta página.</div>';try{const d=await post(GENERATOR_API,{assessment_id:id});$('result').innerHTML='<div class="ok"><strong>Geração concluída.</strong><br>'+d.count+' itens elaborados com '+escapeHtml(d.model||'modelo configurado')+'. Agora volte ao fluxo da prova para revisar as questões.</div>';b.textContent='Gerar novamente';}
+catch(e){let extra='';if(e.data?.error==='openai_not_configured')extra='<br><br>É necessário cadastrar <strong>OPENAI_API_KEY</strong> em Supabase → Edge Functions → Secrets.';$('result').innerHTML='<div class="error"><strong>Não foi possível gerar os itens.</strong><br>'+escapeHtml(e.message)+extra+'</div>';b.textContent='Tentar novamente';}
+finally{b.disabled=false;}}
+function escapeHtml(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+init();
+</script>
+</body>
+</html>
