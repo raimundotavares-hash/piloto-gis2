@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IDOMED • Documentos Oficiais V7.1</title>
+<style>
+:root{--p:#005b55;--o:#f47c20;--bg:#f3f7f6;--line:#d8e4e2;--muted:#657270;--ok:#2e7d32;--danger:#b3261e}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#17201f}header{background:#fff;border-bottom:5px solid var(--p);padding:15px 4%;display:flex;justify-content:space-between;align-items:center}.brand{color:var(--p);font-size:21px;font-weight:900}.container{max-width:1100px;margin:24px auto;padding:0 16px 50px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 8px 28px #0000000d}h1,h2{color:var(--p)}.muted{color:var(--muted);line-height:1.5}.btn,button{border:0;border-radius:9px;padding:11px 15px;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}.primary{background:var(--p);color:#fff}.secondary{background:#edf5f3;color:var(--p)}.orange{background:var(--o);color:#fff}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.artifact{border:1px solid var(--line);border-radius:12px;padding:16px;margin:12px 0}.head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.status{display:inline-block;padding:5px 8px;border-radius:999px;background:#fff5eb;color:#8a4a09;font-size:11px;font-weight:900}.status.ready{background:#edf7f4;color:var(--ok)}.notice,.ok,.error{border-radius:9px;padding:14px;margin-top:14px}.notice{background:#fff5eb;border-left:5px solid var(--o)}.ok{background:#edf7f4;border-left:5px solid var(--ok)}.error{background:#fff0ee;border-left:5px solid var(--danger)}button:disabled,.btn.disabled{opacity:.45;pointer-events:none}.file{font-size:12px;color:var(--muted);margin-top:5px;word-break:break-all}@media(max-width:800px){.head{display:block}}
+</style></head>
+<body>
+<header><div class="brand">IDOMED • Documentos Oficiais V7.1</div><a id="back" class="btn secondary" href="professor-area.html">Voltar ao fluxo</a></header>
+<div class="container">
+<div class="card"><h1>Gerador Documental Oficial</h1><p class="muted">Gera os documentos finais da avaliação em Word (.docx) e PDF (.pdf), usando a avaliação já aprovada e auditada pela Skill Oficial MEDICINA-V7.1-CONFORMIDADE-2026. Os arquivos ficam em armazenamento privado e os links de download expiram automaticamente.</p><div class="actions"><button id="renderBtn" class="primary" onclick="renderDocs()">Gerar / atualizar Word e PDF</button><button class="secondary" onclick="loadLinks()">Atualizar links</button></div><div id="result"></div></div>
+<div class="card"><h2>Pacote pré-aplicação</h2><div id="artifacts"><div class="notice">Carregando documentos...</div></div></div>
+</div>
+<script>
+const API='https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-document-renderer';
+const token=sessionStorage.getItem('platform_access_token')||'',role=sessionStorage.getItem('platform_role')||'';
+const id=new URLSearchParams(location.search).get('assessment_id')||'';
+const $=x=>document.getElementById(x);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+if(!id){document.body.innerHTML='<div style="padding:30px;font-family:Arial"><h2>Avaliação não informada.</h2></div>';throw new Error('assessment_id ausente')}
+$('back').href='prova-fluxo.html?assessment_id='+encodeURIComponent(id);
+if(!token||role!=='professor'){location.href='plataforma.html'}
+const labels={BLUEPRINT_REPORT:'Relatório do Blueprint',COMMENTED_KEY:'Gabarito Comentado',EXAM_TEMPLATE:'Prova do Aluno',OMR_PACKAGE:'Pacote OMR / Gabaritos',TECHNICAL_DOSSIER:'Dossiê Técnico'};
+let arts=[];
+async function call(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw Object.assign(new Error(d.detail||d.error||'erro'),{status:r.status});return d}
+function preview(i){const html=arts[i]?.metadata?.preview_html||arts[i]?.metadata?.content_html;if(!html){alert('Prévia não disponível.');return}const w=window.open('','_blank');if(!w){alert('Permita pop-ups para visualizar.');return}w.document.open();w.document.write(html);w.document.close()}
+function render(items){arts=items||[];if(!arts.length){$('artifacts').innerHTML='<div class="notice">Nenhum artefato encontrado.</div>';return}$('artifacts').innerHTML=arts.map((a,i)=>{const name=labels[a.artifact_type]||a.artifact_type,ready=a.status==='ready',preview=!!(a.metadata?.preview_html||a.metadata?.content_html),docx=a.download_links?.docx||'',pdf=a.download_links?.pdf||'',reason=a.metadata?.reason||'';return `<div class="artifact"><div class="head"><div><strong>${esc(name)}</strong><div class="muted">Status: <span class="status ${ready?'ready':''}">${esc(a.status)}</span></div>${a.metadata?.format_state?`<div class="file">${esc(a.metadata.format_state)}</div>`:''}</div><div class="actions"><button class="secondary" onclick="preview(${i})" ${preview?'':'disabled'}>Visualizar prévia</button><a class="btn primary ${docx?'':'disabled'}" ${docx?`href="${esc(docx)}"`:''} download>Baixar Word</a><a class="btn orange ${pdf?'':'disabled'}" ${pdf?`href="${esc(pdf)}"`:''} target="_blank">Baixar PDF</a></div></div>${reason?`<div class="notice">${esc(reason)}</div>`:''}</div>`}).join('')}
+async function loadLinks(){try{const d=await call({action:'get_links',assessment_id:id});render(d.artifacts||[])}catch(e){if(e.status===401){sessionStorage.clear();location.href='plataforma.html';return}$('artifacts').innerHTML='<div class="error">Erro ao carregar documentos: '+esc(e.message)+'</div>'}}
+async function renderDocs(){const b=$('renderBtn');b.disabled=true;b.textContent='Gerando Word e PDF...';$('result').innerHTML='<div class="notice">Renderizando documentos finais e armazenando-os com acesso privado. Aguarde.</div>';try{const d=await call({action:'render_package',assessment_id:id});$('result').innerHTML=`<div class="ok"><strong>Renderização concluída.</strong><br>${(d.rendered||[]).length} artefatos gerados em Word e PDF.${d.note?'<br>'+esc(d.note):''}</div>`;render(d.artifacts||[])}catch(e){$('result').innerHTML='<div class="error"><strong>Não foi possível gerar os documentos.</strong><br>'+esc(e.message)+'</div>'}finally{b.disabled=false;b.textContent='Gerar / atualizar Word e PDF'}}
+loadLinks();
+</script></body></html>
