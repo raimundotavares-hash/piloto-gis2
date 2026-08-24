@@ -1,0 +1,84 @@
+name: V11 visual regression
+on:
+  push:
+    branches: [fix/canonical-renderer-v11]
+    paths:
+      - '.github/workflows/v11-visual-regression.yml'
+      - 'supabase/platform-document-renderer-v8/**'
+  workflow_dispatch:
+jobs:
+  visual-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate isolated V11 package
+        run: |
+          set -euo pipefail
+          curl -fsS -X POST 'https://lvdzsqqimxbhxezaiwlr.supabase.co/functions/v1/platform-document-renderer-v11-internal-test' -H 'Content-Type: application/json' -d '{}' > /tmp/result.json
+          jq -e '.ok == true' /tmp/result.json >/dev/null
+          jq -r '.out[] | select(.type=="EXAM_TEMPLATE") | .pdf' /tmp/result.json > /tmp/exam.url
+          jq -r '.out[] | select(.type=="OMR_PACKAGE") | .pdf' /tmp/result.json > /tmp/omr.url
+          jq -r '.out[] | select(.type=="BLUEPRINT_REPORT") | .pdf' /tmp/result.json > /tmp/blueprint.url
+          curl -fsSL "$(cat /tmp/exam.url)" -o /tmp/exam.pdf
+          curl -fsSL "$(cat /tmp/omr.url)" -o /tmp/omr.pdf
+          curl -fsSL "$(cat /tmp/blueprint.url)" -o /tmp/blueprint.pdf
+      - name: Install raster tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
+          python -m pip install --quiet pillow
+      - name: Rasterize representative pages
+        run: |
+          pdftoppm -f 1 -singlefile -png -r 120 /tmp/exam.pdf /tmp/exam_p1 >/dev/null 2>&1
+          pdftoppm -f 2 -singlefile -png -r 120 /tmp/exam.pdf /tmp/exam_p2 >/dev/null 2>&1
+          pdftoppm -f 1 -singlefile -png -r 120 /tmp/omr.pdf /tmp/omr >/dev/null 2>&1
+          pdftoppm -f 1 -singlefile -png -r 120 /tmp/blueprint.pdf /tmp/blueprint >/dev/null 2>&1
+      - name: Independent pixel/layout gate
+        run: |
+          cat > /tmp/check.py <<'PY'
+          from PIL import Image
+          import json, sys
+          def metrics(path):
+              im=Image.open(path).convert('RGB'); w,h=im.size; px=im.load()
+              ink=[]; black=0; topblack=0; topn=0; tealish=0
+              left=right=0
+              for y in range(h):
+                for x in range(w):
+                  r,g,b=px[x,y]
+                  isink=min(r,g,b)<242
+                  if isink:
+                    ink.append((x,y))
+                    if x<w//2:left+=1
+                    else:right+=1
+                  if r<35 and g<35 and b<35:black+=1
+                  if y<int(h*.14):
+                    topn+=1
+                    if r<35 and g<35 and b<35:topblack+=1
+                  if g>70 and g>r*1.15 and g>b*.85 and r<130:tealish+=1
+              if ink:
+                xs=[p[0] for p in ink]; ys=[p[1] for p in ink]; bbox=[min(xs),min(ys),max(xs),max(ys)]
+              else:bbox=[0,0,0,0]
+              return {'size':[w,h],'ink_ratio':len(ink)/(w*h),'black_ratio':black/(w*h),'top_black_ratio':topblack/max(1,topn),'teal_ratio':tealish/(w*h),'bbox':bbox,'left_ink':left,'right_ink':right,'lr_ratio':min(left,right)/max(1,max(left,right))}
+          data={k:metrics('/tmp/'+k+'.png') for k in ['exam_p1','exam_p2','omr','blueprint']}
+          print('V11_VISUAL_METRICS='+json.dumps(data,sort_keys=True))
+          errors=[]
+          # Faixa preta antiga: reprova se mais de 8% do topo for preto puro.
+          if data['exam_p1']['top_black_ratio']>.08: errors.append('exam_header_black_band')
+          if data['omr']['top_black_ratio']>.08: errors.append('omr_header_black_band')
+          if data['blueprint']['top_black_ratio']>.08: errors.append('blueprint_header_black_band')
+          # Documento deve ocupar a página sem ser vazio nem excessivamente saturado.
+          if not (.035 <= data['exam_p1']['ink_ratio'] <= .30): errors.append('exam_p1_occupancy')
+          if not (.045 <= data['exam_p2']['ink_ratio'] <= .35): errors.append('exam_p2_occupancy')
+          if not (.035 <= data['omr']['ink_ratio'] <= .30): errors.append('omr_occupancy')
+          if not (.035 <= data['blueprint']['ink_ratio'] <= .38): errors.append('blueprint_occupancy')
+          # Página objetiva deve ter conteúdo substancial em ambas as colunas.
+          if data['exam_p2']['lr_ratio'] < .45: errors.append('objective_two_column_imbalance')
+          # Blueprint deve ser paisagem.
+          bw,bh=data['blueprint']['size']
+          if bw<=bh: errors.append('blueprint_not_landscape_pixels')
+          # Identidade institucional deve conter pixels de tom teal em prova, OMR e blueprint.
+          for k in ['exam_p1','omr','blueprint']:
+            if data[k]['teal_ratio'] < .0005: errors.append(k+'_missing_teal_identity')
+          print('V11_VISUAL_ERRORS='+json.dumps(errors))
+          if errors: sys.exit(1)
+          PY
+          python /tmp/check.py
