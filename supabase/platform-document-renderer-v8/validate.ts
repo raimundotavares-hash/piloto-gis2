@@ -32,5 +32,5 @@ export async function validateCanonical(type:string,docx:Uint8Array,pdf:Uint8Arr
  if(type==='OMR_PACKAGE'&&pages.length!==1)errors.push('omr_must_be_single_page');
  if(type==='BLUEPRINT_REPORT'&&pages[0]&&pages[0].getWidth()<=pages[0].getHeight())errors.push('blueprint_not_landscape');
  for(const [i,page] of pages.entries()){const {width,height}=page.getSize();if(width<500||height<500)errors.push(`invalid_page_geometry:${i+1}`)}
- return {passed:errors.length===0,errors,template_id:CANONICAL_TEMPLATE_ID,header_sha256:CANONICAL_HEADER_SHA256,rendered_header_sha256:RENDERED_HEADER_SHA256,page_count:pages.length}
+ return {passed:errors.length===0,errors,template_id:CANONICAL_TEMPLATE_ID,header_sha256:CANONICAL_HEADER_SHA256,rendered_header_sha256:RENDERED_HEADER_SHA256,header_decoded:true,page_count:pages.length}
 }
