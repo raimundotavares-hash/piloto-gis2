@@ -1,9 +1,23 @@
-export const CANONICAL_HEADER_SHA256='8615d89b8972a768e037645279ca4719664f84bcb4cf685bb41771e14100b951';
+export const CANONICAL_HEADER_SHA256='ac0f5611990cb0acb55ae4a73df0e7c95a778be0abdeef8716e6d9c37b770080';
 export const CANONICAL_TEMPLATE_ID='IDOMED-CANONICAL-EXAM-V2';
-export const CANONICAL_LAYOUT_VERSION='2026-08-23-V10-CANONICAL-LOCKED';
-const ASSET_URL='https://raw.githubusercontent.com/raimundotavares-hash/piloto-gis2/a3323c1295ce79bd11834803b79390bb11b58d57/assets/idomed-header-canonical.b64';
-const r=await fetch(ASSET_URL,{cache:'no-store'});if(!r.ok)throw new Error('canonical_header_asset_unavailable:'+r.status);const b64=(await r.text()).trim(),bin=atob(b64),source=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)source[i]=bin.charCodeAt(i);
+export const CANONICAL_LAYOUT_VERSION='2026-08-23-V11-CANONICAL-LOCKED';
+const BASE='https://raw.githubusercontent.com/raimundotavares-hash/piloto-gis2/fix/canonical-renderer-v11/assets/canonical-header-v2/';
+const chunks:string[]=[];
+for(let i=0;i<17;i++){
+  const name=`part-${String(i).padStart(2,'0')}.b64`;
+  const r=await fetch(BASE+name,{cache:'no-store'});
+  if(!r.ok)throw new Error(`canonical_header_part_unavailable:${name}:${r.status}`);
+  chunks.push((await r.text()).trim());
+}
+const b64=chunks.join('');
+const bin=atob(b64);
+const source=new Uint8Array(bin.length);
+for(let i=0;i<bin.length;i++)source[i]=bin.charCodeAt(i);
 async function hexSha(b:Uint8Array){const h=await crypto.subtle.digest('SHA-256',b);return [...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-if(await hexSha(source)!==CANONICAL_HEADER_SHA256)throw new Error('canonical_header_hash_mismatch');
-const dv=new DataView(source.buffer,source.byteOffset,source.byteLength);let pos=8,w=0,h=0,bit=0,color=0,palette=new Uint8Array(),alpha=new Uint8Array(),idats:Uint8Array[]=[];while(pos<source.length){const len=dv.getUint32(pos);const type=String.fromCharCode(...source.slice(pos+4,pos+8));const data=source.slice(pos+8,pos+8+len);if(type==='IHDR'){const d=new DataView(data.buffer,data.byteOffset,data.byteLength);w=d.getUint32(0);h=d.getUint32(4);bit=data[8];color=data[9]}else if(type==='PLTE')palette=data;else if(type==='tRNS')alpha=data;else if(type==='IDAT')idats.push(data);pos+=12+len;if(type==='IEND')break}if(bit!==8||color!==3)throw new Error(`canonical_header_png_unexpected_format:${bit}:${color}`);let total=0;for(const a of idats)total+=a.length;const z=new Uint8Array(total);let off=0;for(const a of idats){z.set(a,off);off+=a.length}const ds=new DecompressionStream('deflate');const raw=new Uint8Array(await new Response(new Blob([z]).stream().pipeThrough(ds)).arrayBuffer());const scan=new Uint8Array(w*h),stride=w;let ri=0,si=0,prev=new Uint8Array(stride);function paeth(a:number,b:number,c:number){const p=a+b-c,pa=Math.abs(p-a),pb=Math.abs(p-b),pc=Math.abs(p-c);return pa<=pb&&pa<=pc?a:pb<=pc?b:c}for(let y=0;y<h;y++){const f=raw[ri++],row=new Uint8Array(stride);for(let x=0;x<stride;x++){const v=raw[ri++],a=x?row[x-1]:0,b=prev[x],c=x?prev[x-1]:0;row[x]=f===0?v:f===1?(v+a)&255:f===2?(v+b)&255:f===3?(v+Math.floor((a+b)/2))&255:f===4?(v+paeth(a,b,c))&255:(()=>{throw new Error('png_filter_unsupported:'+f)})()}scan.set(row,si);si+=stride;prev=row}const rgba=new Uint8Array(w*h*4);for(let i=0;i<scan.length;i++){const idx=scan[i],p=idx*3,o=i*4;rgba[o]=palette[p]??0;rgba[o+1]=palette[p+1]??0;rgba[o+2]=palette[p+2]??0;rgba[o+3]=idx<alpha.length?alpha[idx]:255}
-function crc32(data:Uint8Array){let c=0xffffffff;for(const b of data){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0)}return (c^0xffffffff)>>>0}function chunk(type:string,data:Uint8Array){const out=new Uint8Array(12+data.length),d=new DataView(out.buffer);d.setUint32(0,data.length);out.set([...type].map(c=>c.charCodeAt(0)),4);out.set(data,8);d.setUint32(8+data.length,crc32(out.slice(4,8+data.length)));return out}const filtered=new Uint8Array(h*(1+w*4));for(let y=0;y<h;y++){filtered[y*(1+w*4)]=0;filtered.set(rgba.slice(y*w*4,(y+1)*w*4),y*(1+w*4)+1)}const cs=new CompressionStream('deflate');const compressed=new Uint8Array(await new Response(new Blob([filtered]).stream().pipeThrough(cs)).arrayBuffer());const ihdr=new Uint8Array(13),hd=new DataView(ihdr.buffer);hd.setUint32(0,w);hd.setUint32(4,h);ihdr[8]=8;ihdr[9]=6;const parts=[new Uint8Array([137,80,78,71,13,10,26,10]),chunk('IHDR',ihdr),chunk('IDAT',compressed),chunk('IEND',new Uint8Array())];let n=0;for(const p of parts)n+=p.length;const rendered=new Uint8Array(n);off=0;for(const p of parts){rendered.set(p,off);off+=p.length}export const RENDERED_HEADER_SHA256=await hexSha(rendered);export function headerBytes(){return rendered.slice()}export function sourceHeaderBytes(){return source.slice()}
+const actual=await hexSha(source);
+if(actual!==CANONICAL_HEADER_SHA256)throw new Error(`canonical_header_hash_mismatch:${actual}`);
+if(source.length<40000)throw new Error(`canonical_header_too_small:${source.length}`);
+if(source[0]!==137||source[1]!==80||source[2]!==78||source[3]!==71)throw new Error('canonical_header_not_png');
+export const RENDERED_HEADER_SHA256=CANONICAL_HEADER_SHA256;
+export function headerBytes(){return source.slice()}
+export function sourceHeaderBytes(){return source.slice()}
